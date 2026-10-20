@@ -19,8 +19,8 @@
 **Slide 3 — Product Workflow**
 1. Paste Resume + Target JD.
 2. Extract job requirements.
-3. Map each requirement to existing resume evidence.
-4. Rewrite 3–5 bullets, if the resume supports them.
+3. Retrieve candidate evidence from the resume and the user's Fact Bank, and map each requirement to it by fact ID.
+4. Rewrite up to 5 bullets, if the resume supports them; verify every claim against its source, repair or drop failures.
 5. Show Before / After / Why Changed + Not Evidenced.
 6. Save history; charge for successful AI-tailoring sessions.
 
@@ -31,8 +31,10 @@ flowchart LR
   FE --> API[FastAPI REST backend]
   API --> AUTH[Authentication / session]
   API --> DB[(SQLite: users, runs, credits)]
-  API --> CHECK[Evidence and numeric-claim checks]
-  CHECK --> LLM[OpenAI API, if configured]
+  API --> AGENT[Agent loop: plan, retrieve, map, draft, verify and repair, coach]
+  AGENT <--> LLM[OpenAI API, if configured]
+  AGENT <--> BANK[(Fact Bank + BM25 retrieval)]
+  AGENT --> CHECK[Claim-quote and numeric/tool checks]
   API --> STRIPE[Stripe test Checkout, if configured]
   STRIPE --> WEBHOOK[Verified webhook / idempotent credit grant]
   WEBHOOK --> DB
@@ -56,7 +58,8 @@ flowchart LR
 **Slide 7 — Lessons Learned, Business Model & Next Steps**
 - Lessons: factuality is harder than fluent text; data storage needs privacy measures; external API costs need credit accounting.
 - Pricing hypothesis: 3 free credits; 5 AI credits for $4.99, subject to user validation and costs.
-- Next: better evidence verifier, PDF/DOCX upload parsing, usability study, rate limits, persistent hosted DB, deletion controls, live billing readiness.
+- Eval (real API, `eval/results.md`): on a low-match case the single-prompt baseline produced 3 flagged rewrites; the agent produced 0 and listed gaps. On a partial match the agent repaired a failing draft in 1 round.
+- Next: embedding-based retrieval, better evidence verifier, PDF/DOCX upload parsing, usability study, rate limits, persistent hosted DB, deletion controls, live billing readiness.
 
 ## Three evaluation scenarios
 

@@ -1,6 +1,8 @@
 # ResumeFit 2.0 — Evidence-First AI Resume Tailor
 
-**A real, locally runnable UCLA AI Startup capstone demo.** This is an **upgrade of the original ResumeFit-MVP** rather than a throwaway template: it retains the selected blue-and-white UI, authentication, credits, history and optional Stripe test-mode billing.
+**A real, locally runnable UCLA AI Startup capstone demo.** This is an **upgrade of the original ResumeFit-MVP** rather than a throwaway template: it retains the selected blue-and-white UI, authentication, credits, history and optional Stripe test-mode billing. Version 2.1 adds a multi-step **verifying agent** and a per-user **Fact Bank** (see below).
+
+> **Status (handoff):** the app runs locally end to end, including live OpenAI calls. **Not yet done: public deployment and a real Stripe test-mode round trip.** See [Handoff / remaining work](#handoff--remaining-work).
 
 ## Get running on a Mac using Cursor (5–10 minutes)
 
@@ -44,7 +46,7 @@
 
 **Model grounding:** The system prompt requests evidence-backed JSON containing 3–5 proposed bullet rewrites, change explanations, JD requirements, source quotes and missing qualifications. The backend checks that the before/evidence excerpts are present in the original resume, and rejects new numeric claims and several named technical tools. These checks do *not* guarantee zero hallucinations. Review each suggestion, especially manually edited ones, before use. Missing qualifications mean *not documented in the resume*, not *the user cannot do them*. There is no fake ATS pass-rate percentage.
 
-**AI API was not called with real credentials during packaged development.** Real-API network connectivity, your account/model access and response quality need to be tested after key configuration.
+**Live-API status:** the v2.1 agent has been run against the real OpenAI API (`gpt-4.1-mini`) locally, both through `eval/run_eval.py` and through the browser UI. Results depend on your key and model access; re-run the eval after changing the model or prompts.
 
 ## 2.1 — Agentic tailoring (what changed)
 
@@ -88,7 +90,7 @@ Run `python eval/run_eval.py` (needs a key) to compare the single-prompt baselin
 python -m unittest discover -s tests -v
 ```
 
-12 tests cover: demo evidence, no made-up numeric claims/tools in accepted AI output, password hashing, Stripe signature validation, sample endpoint, PDF/DOCX upload, invalid/oversized files, demo analysis, and Word export round-trip.
+26 tests cover: demo evidence, no made-up numeric claims/tools in accepted AI output, password hashing, Stripe signature validation, sample endpoint, PDF/DOCX upload, invalid/oversized files, demo analysis, Word export round-trip, **and (v2.1)** the agent loop with a scripted LLM (verification, repair, dropping unverifiable rewrites, citation integrity, retrieval, provider errors), credit-charging rules, and Fact Bank isolation. Install test dependencies first: `pip install -r requirements-dev.txt`.
 
 ## Technical architecture
 
@@ -111,10 +113,26 @@ The project includes `render.yaml` as a **starting template**. The user must con
 
 - `server.py` — API, upload parsing, business logic, authentication, database, billing.
 - `static/index.html`, `styles.css`, `app.js` — production-style UI and review controls.
-- `tests/` — 12 passing automated tests.
+- `agent.py` — the tailoring agent (plan → retrieve → map → draft → verify/repair → coach).
+- `eval/run_eval.py`, `eval/results.md` — baseline-vs-agent evaluation harness and its last output.
+- `tests/` — 26 passing automated tests (no API key needed).
 - `.env.example` — environment variable template (no real secrets).
 - `DEMO_SCRIPT.md` — the recommended 3-minute live capstone demo.
 - `MARKET_RESEARCH.md` — sourced notes on competing products and differentiation.
 - `CAPSTONE_PRESENTATION.md` — original capstone presentation outline.
 
 **Brand principle:** *Tailor your resume, not your facts.*
+
+## Handoff / remaining work
+
+Done locally and verified: auth, upload/export, agent with live OpenAI, Fact Bank, credit rules (no charge on errors or ungrounded results), basic rate limiting, 26 automated tests, baseline-vs-agent eval (`eval/results.md`).
+
+**Still to do (deployment owner):**
+1. **Public URL.** Deploy (Render template in `render.yaml`, or any host). Set `OPENAI_API_KEY`, `APP_BASE_URL` (public https origin, no trailing slash) and `COOKIE_SECURE=true` as host-side secrets. `render.yaml` does **not** yet declare `APP_BASE_URL` or the secrets.
+2. **Persistent storage.** SQLite on an ephemeral disk loses users, credits, history and the Fact Bank on every redeploy. Mount a persistent disk (set `DATABASE_PATH`) or migrate to managed Postgres.
+3. **Stripe test mode end to end.** Set `STRIPE_SECRET_KEY` (test key) and `STRIPE_WEBHOOK_SECRET`; register `https://<host>/api/billing/webhook` for `checkout.session.completed`; pay with test card `4242 4242 4242 4242` and confirm credits +5 and that a replayed webhook does not double-grant. Locally this needs the Stripe CLI (`stripe listen --forward-to localhost:8001/api/billing/webhook`). Also test a declined/cancelled checkout. **Never run Stripe live keys.**
+4. **Demo-path rehearsal on the deployed URL:** sign up → tailor → exhaust the free credits → test payment → tailor again.
+5. **Known limitations to be honest about:** in-memory rate limiter is per process; the agent makes ~5–9 sequential model calls (roughly 10–60 s); BM25 retrieval is keyword-based (embeddings are the next upgrade in `retrieve()`); no email verification; without `OPENAI_API_KEY` the server silently runs the rule-based demo (the UI badge says so).
+6. **Write-up (4–5 pages)** and a standalone architecture diagram image (a mermaid diagram is in `CAPSTONE_PRESENTATION.md`).
+
+**Security:** `.env` is git-ignored; never commit it. Any API key that has been pasted into chats, screenshots or terminals should be rotated before the public deployment.

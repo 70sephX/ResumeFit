@@ -26,6 +26,10 @@ Click **Accept** for the machine-learning suggestion, optionally **Edit**, then 
 
 Click the AWS/GCP requirement: notice **Not evidenced**. Explain that the product will not insert a missing qualification or invent cloud experience.
 
+### 2:10–2:30 (real-AI runs) | Show the agent, not just the answer
+
+Open **How the agent worked**: point to the plan, the retrieval step, and a verify round that failed and was repaired (or a rewrite that was rejected). Open **Fact Bank** and explain that saved facts are retrieved as evidence but never inserted into a resume without review. “A chatbot can’t check its own claims against your resume or remember your verified experience across applications; this does.”
+
 ### 2:30–3:00 | Technology + next steps
 
 “Our front end uses vanilla JavaScript, with a Python FastAPI backend, private SQLite history, and an optional OpenAI API for genuinely context-aware rewriting. A test-mode Stripe Checkout integration supports the credit model. For production, I would add a managed database, email verification, rate limits and verified Stripe testing.”
@@ -46,6 +50,8 @@ Click the AWS/GCP requirement: notice **Not evidenced**. Explain that the produc
 
 **Why no ATS score?** A percentage without access to the exact employer ATS is misleading. The app shows requirement evidence and gaps instead.
 
-**How do you prevent hallucinations?** LLM instruction + exact source evidence matching + new-number / named-tool filtering + human approval. It reduces risk but is not a guarantee.
+**How do you prevent hallucinations?** The agent maps requirements to fact IDs (evidence is looked up in code), splits each rewrite into claims, and requires every claim to be backed by a quote that exists in the source bullet. Failures are sent back for repair and then dropped. Rule checks reject new numbers/tools, and the user approves every edit. In our eval, the single-prompt baseline produced 3 flagged rewrites on a low-match case; the agent produced none. This reduces risk but is not a guarantee.
+
+**Is it just a ChatGPT wrapper?** No: multi-step plan/retrieve/verify/repair loop, retrieval over a persistent per-user Fact Bank, deterministic verification, bounded cost, and honest refusal when nothing can be supported.
 
 **How will you make money?** A free trial of three successful AI analyses, followed by pay-as-you-go credits (5 for $4.99, illustrative/test pricing). Actual payment requires separate activation.
