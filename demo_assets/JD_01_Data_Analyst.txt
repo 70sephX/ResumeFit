@@ -1,0 +1,8 @@
+Junior Data Analyst — Growth Team
+Requirements:
+• Experience with Python and SQL for data analysis.
+• Build clear dashboards and reports using Tableau or similar tools.
+• Familiarity with machine learning fundamentals.
+• Communicate insights to non-technical audiences.
+• Experience with cloud platforms such as AWS or GCP.
+• Collaborate across teams to support business decisions.
